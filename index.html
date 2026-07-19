@@ -22,6 +22,7 @@
         body {
             background-color: var(--bg-gray);
             color: #333;
+            overflow-x: hidden;
         }
         header {
             background-color: var(--main-blue);
@@ -76,6 +77,13 @@
             display: flex;
             align-items: center;
             cursor: pointer;
+            padding: 5px 10px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            transition: border 0.2s;
+        }
+        .cart-box:hover {
+            border: 1px solid white;
         }
         #cart-count {
             background-color: var(--zeta-gold);
@@ -109,7 +117,6 @@
             padding: 0 20px;
         }
         
-        /* New Categories Strip Style */
         .category-container {
             display: flex;
             gap: 10px;
@@ -201,6 +208,129 @@
             background: var(--card-white);
             border-radius: 8px;
         }
+
+        /* NEW: Cart Slide Drawer Panel styles */
+        .cart-drawer {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 380px;
+            height: 100%;
+            background-color: white;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.15);
+            z-index: 1000;
+            transition: right 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
+        }
+        .cart-drawer.open {
+            right: 0;
+        }
+        .cart-header {
+            background-color: var(--main-blue);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .close-cart-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .cart-items-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .empty-cart-text {
+            text-align: center;
+            color: #777;
+            margin-top: 40px;
+        }
+        .cart-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+        .cart-item-img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+        }
+        .cart-item-details {
+            flex: 1;
+        }
+        .cart-item-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .cart-item-price {
+            font-weight: bold;
+            color: #333;
+        }
+        .remove-item-btn {
+            background: none;
+            border: none;
+            color: #c45500;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .remove-item-btn:hover {
+            text-decoration: underline;
+        }
+        .cart-footer {
+            padding: 20px;
+            border-top: 1px solid #ddd;
+            background-color: #f9f9f9;
+        }
+        .cart-total-box {
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .checkout-btn {
+            background-color: var(--zeta-gold);
+            border: 1px solid #a88734;
+            width: 100%;
+            padding: 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+        }
+        .checkout-btn:hover {
+            background-color: #e68a00;
+        }
+        /* Background dim overlay when cart is open */
+        .cart-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            z-index: 999;
+            display: none;
+        }
+        .cart-overlay.show {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -214,7 +344,9 @@
             </div>
             <div class="nav-links">
                 <div>Hello, Sign In</div>
-                <div class="cart-box"><span id="cart-count">0</span><span>Cart</span></div>
+                <div class="cart-box" id="open-cart-trigger">
+                    <span id="cart-count">0</span><span>Cart</span>
+                </div>
             </div>
         </div>
     </header>
@@ -227,7 +359,6 @@
     </div>
 
     <main class="main-container">
-        <!-- New Category Navigation Strip -->
         <div class="category-container" id="category-strip">
             <button class="category-btn active" data-category="all">All Products</button>
             <button class="category-btn" data-category="electronics">Electronics</button>
@@ -240,43 +371,72 @@
         <div class="product-grid" id="grid-display"></div>
     </main>
 
+    <!-- NEW: Cart Drawer Elements -->
+    <div class="cart-overlay" id="cart-screen-overlay"></div>
+    <div class="cart-drawer" id="shopping-cart-drawer">
+        <div class="cart-header">
+            <h3>Shopping Cart</h3>
+            <button class="close-cart-btn" id="close-cart-trigger">&times;</button>
+        </div>
+        <div class="cart-items-container" id="cart-items-list">
+            <!-- Dynamic items populate here -->
+            <p class="empty-cart-text">Your cart is completely empty.</p>
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total-box">
+                <span>Subtotal:</span>
+                <span id="cart-calculated-total">₹0.00</span>
+            </div>
+            <button class="checkout-btn">Proceed to Checkout</button>
+        </div>
+    </div>
+
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // Updated items list containing a 'category' metric for smart filtering
             const products = [
-                { id: 1, category: "electronics", title: "Quantum Wireless Noise-Canceling Headphones", price: "$129.99", rating: "★★★★☆ (4.5)", img: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=400&q=80", link:"https://link.amazon/B03ofcJ2m" },
-                { id: 2, category: "electronics", title: "AeroTrack Mechanical Ergonomic Keyboard", price: "$89.50", rating: "★★★★★ (4.8)", img: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0eWiNeaN" },
-                { id: 3, category: "electronics", title: "ChronoFit Smart Watch v4 (Waterproof)", price: "$199.00", rating: "★★★★☆ (4.2)", img: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/A0aOajE9z" },
-                { id: 4, category: "home", title: "Stanley Quencher H2.0 FlowState Tumbler (40oz)", price: "$45.00", rating: "★★★★★ (4.7)", img: "https://images.unsplash.com/photo-1574634534894-89d7576c8259?w=500&auto=format&fit=crop&q=60", link: "https://link.amazon/B07jlslw0" },
-                { id: 5, category: "books", title: "Montblanc Meisterstück Classique Ballpoint Pen", price: "$440.00", rating: "★★★★★ (4.9)", img: "https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?w=500&auto=format&fit=crop&q=60", link: "https://link.amazon/B07AB97ST" },
-                { id: 6, category: "fashion", title: "Ray-Ban Classic Aviator Sunglasses", price: "₹10,990.00", rating: "★★★★★ (4.8)", img: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0cPaAJma" },
-                { id: 7, category: "skincare", title: "Cetaphil Moisturising Lotion (250ml)", price: "₹2,316.00", rating: "★★★★★ (4.6)", img: "https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&w=600&q=80", link: "https://link.amazon/B0ivKpGaS" },
-                { id: 8, category: "skincare", title: "Cetaphil Sun SPF 50+ Light Sunscreen Gel", price: "₹3,212.00", rating: "★★★★★ (4.7)", img: "https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B08rY5SZn" },
-                { id: 9, category: "skincare", title: "Cetaphil Bright Healthy Radiance Face Serum", price: "₹2,267.00", rating: "★★★★☆ (4.4)", img: "Capture.PNG", link: "https://link.amazon/B0he4J0P9" },
-                { id: 10, category: "home", title: "Minimalist Floating Bookshelf (Set of 3)", price: "₹2,499.00", rating: "★★★★★ (4.6)", img: "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0cotnWEd" },
-                { id: 11, category: "books", title: "Classic Novel Collection (Hardcover Set)", price: "₹1,899.00", rating: "★★★★★ (4.9)", img: "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0fTVdy7C" },
-                { id: 12, category: "fashion", title: "Coach Luxury Canvas Crossbody Shoulder Bag", price: "₹29,500.00", rating: "★★★★★ (4.8)", img: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0byFw1Uo" },
-                { id: 13, category: "fashion", title: "Kate Spade New York Classic Leather Tote Bag", price: "₹24,000.00", rating: "★★★★★ (4.7)", img: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B077swYeI" },
-                { id: 14, category: "electronics", title: "ASUS Vivobook 15 Thin and Light Laptop", price: "₹38,990.00", rating: "★★★★☆ (4.3)", img: "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0flZ90iS" },
-                { id: 15, category: "electronics", title: "HP Laptop 15s (AMD Ryzen 3, 8GB RAM)", price: "₹32,490.00", rating: "★★★★☆ (4.2)", img: "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&w=600&q=80", link: "https://link.amazon/B0iZBVemb" },
-                { id: 16, category: "electronics", title: "SanDisk Ultra 64GB USB 3.0 Flash Drive", price: "₹999.00", rating: "★★★★★ (4.4)", img: "https://images.unsplash.com/photo-1618424181497-157f25b6ddd5?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B03mjeBKx" },
-                { id: 17, category: "electronics", title: "Logitech M350s Wireless Mouse", price: "₹599.00", rating: "★★★★☆ (4.3)", img: "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B01Cxmp2z" },
-                { id: 18, category: "electronics", title: "Portronics Konnect L 1.2m Fast Charging Cable", price: "₹160.00", rating: "★★★★☆ (4.1)", img: "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0hitkiqE" },
-                { id: 19, category: "electronics", title: "TP-Link Tapio Smart Wi-Fi Plug", price: "₹999.00", rating: "★★★★★ (4.5)", img: "https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0iZOYBnI" },
-                { id: 20, category: "books", title: "Percy Jackson and the Olympians (5-Book Boxed Set)", price: "₹1,950.00", rating: "★★★★★ (4.8)", img: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0iekYu09" },
-                { id: 21, category: "books", title: "Brustro Artist Watercolor Pad (300 GSM, 25% Cotton)", price: "₹438.00", rating: "★★★★★ (5.0)", img: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0e6qPTHa" },
-                { id: 22, category: "books", title: "Arteza Expert Premium Watercolor Pencils (Set of 48/72)", price: "₹1,999.00", rating: "★★★★★ (4.7)", img: "https://images.unsplash.com/photo-1519751138087-5bf79df62d5b?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0hNeYf4N" }
+                { id: 1, category: "electronics", title: "Quantum Wireless Noise-Canceling Headphones", priceText: "$129.99", priceValue: 10900, rating: "★★★★☆ (4.5)", img: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=400&q=80", link:"https://link.amazon/B03ofcJ2m" },
+                { id: 2, category: "electronics", title: "AeroTrack Mechanical Ergonomic Keyboard", priceText: "$89.50", priceValue: 7500, rating: "★★★★★ (4.8)", img: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0eWiNeaN" },
+                { id: 3, category: "electronics", title: "ChronoFit Smart Watch v4 (Waterproof)", priceText: "$199.00", priceValue: 16700, rating: "★★★★☆ (4.2)", img: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/A0aOajE9z" },
+                { id: 4, category: "home", title: "Stanley Quencher H2.0 FlowState Tumbler (40oz)", priceText: "$45.00", priceValue: 3700, rating: "★★★★★ (4.7)", img: "https://images.unsplash.com/photo-1574634534894-89d7576c8259?w=500&auto=format&fit=crop&q=60", link: "https://link.amazon/B07jlslw0" },
+                { id: 5, category: "books", title: "Montblanc Meisterstück Classique Ballpoint Pen", priceText: "$440.00", priceValue: 36900, rating: "★★★★★ (4.9)", img: "https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?w=500&auto=format&fit=crop&q=60", link: "https://link.amazon/B07AB97ST" },
+                { id: 6, category: "fashion", title: "Ray-Ban Classic Aviator Sunglasses", priceText: "₹10,990.00", priceValue: 10990, rating: "★★★★★ (4.8)", img: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0cPaAJma" },
+                { id: 7, category: "skincare", title: "Cetaphil Moisturising Lotion (250ml)", priceText: "₹2,316.00", priceValue: 2316, rating: "★★★★★ (4.6)", img: "https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&w=600&q=80", link: "https://link.amazon/B0ivKpGaS" },
+                { id: 8, category: "skincare", title: "Cetaphil Sun SPF 50+ Light Sunscreen Gel", priceText: "₹3,212.00", priceValue: 3212, rating: "★★★★★ (4.7)", img: "https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B08rY5SZn" },
+                { id: 9, category: "skincare", title: "Cetaphil Bright Healthy Radiance Face Serum", priceText: "₹2,267.00", priceValue: 2267, rating: "★★★★☆ (4.4)", img: "Capture.PNG", link: "https://link.amazon/B0he4J0P9" },
+                { id: 10, category: "home", title: "Minimalist Floating Bookshelf (Set of 3)", priceText: "₹2,499.00", priceValue: 2499, rating: "★★★★★ (4.6)", img: "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0cotnWEd" },
+                { id: 11, category: "books", title: "Classic Novel Collection (Hardcover Set)", priceText: "₹1,899.00", priceValue: 1899, rating: "★★★★★ (4.9)", img: "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0fTVdy7C" },
+                { id: 12, category: "fashion", title: "Coach Luxury Canvas Crossbody Shoulder Bag", priceText: "₹29,500.00", priceValue: 29500, rating: "★★★★★ (4.8)", img: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0byFw1Uo" },
+                { id: 13, category: "fashion", title: "Kate Spade New York Classic Leather Tote Bag", priceText: "₹24,000.00", priceValue: 24000, rating: "★★★★★ (4.7)", img: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B077swYeI" },
+                { id: 14, category: "electronics", title: "ASUS Vivobook 15 Thin and Light Laptop", priceText: "₹38,990.00", priceValue: 38990, rating: "★★★★☆ (4.3)", img: "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0flZ90iS" },
+                { id: 15, category: "electronics", title: "HP Laptop 15s (AMD Ryzen 3, 8GB RAM)", priceText: "₹32,490.00", priceValue: 32490, rating: "★★★★☆ (4.2)", img: "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&w=600&q=80", link: "https://link.amazon/B0iZBVemb" },
+                { id: 16, category: "electronics", title: "SanDisk Ultra 64GB USB 3.0 Flash Drive", priceText: "₹999.00", priceValue: 999, rating: "★★★★★ (4.4)", img: "https://images.unsplash.com/photo-1618424181497-157f25b6ddd5?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B03mjeBKx" },
+                { id: 17, category: "electronics", title: "Logitech M350s Wireless Mouse", priceText: "₹599.00", priceValue: 599, rating: "★★★★☆ (4.3)", img: "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B01Cxmp2z" },
+                { id: 18, category: "electronics", title: "Portronics Konnect L 1.2m Fast Charging Cable", priceText: "₹160.00", priceValue: 160, rating: "★★★★☆ (4.1)", img: "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0hitkiqE" },
+                { id: 19, category: "electronics", title: "TP-Link Tapio Smart Wi-Fi Plug", priceText: "₹999.00", priceValue: 999, rating: "★★★★★ (4.5)", img: "https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0iZOYBnI" },
+                { id: 20, category: "books", title: "Percy Jackson and the Olympians (5-Book Boxed Set)", priceText: "₹1,950.00", priceValue: 1,950, rating: "★★★★★ (4.8)", img: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0iekYu09" },
+                { id: 21, category: "books", title: "Brustro Artist Watercolor Pad (300 GSM, 25% Cotton)", priceText: "₹438.00", priceValue: 438, rating: "★★★★★ (5.0)", img: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0e6qPTHa" },
+                { id: 22, category: "books", title: "Arteza Expert Premium Watercolor Pencils (Set of 48/72)", priceText: "₹1,999.00", priceValue: 1999, rating: "★★★★★ (4.7)", img: "https://images.unsplash.com/photo-1519751138087-5bf79df62d5b?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0hNeYf4N" }
             ];
 
-            let currentCartCount = 0;
-            let activeCategory = "all"; // Tracking active category index context global state
+            // Core State Tracking Arrays
+            let userShoppingCart = [];
+            let activeCategory = "all";
             
+            // DOM Selections
             const gridDisplay = document.getElementById('grid-display');
             const cartCountBadge = document.getElementById('cart-count');
             const searchInput = document.getElementById('search-input');
             const searchButton = document.getElementById('search-button');
             const logoButton = document.getElementById('logo-btn');
             const categoryStrip = document.getElementById('category-strip');
+            
+            // Drawer Panel Selections
+            const drawerElement = document.getElementById('shopping-cart-drawer');
+            const overlayElement = document.getElementById('cart-screen-overlay');
+            const openCartTrigger = document.getElementById('open-cart-trigger');
+            const closeCartTrigger = document.getElementById('close-cart-trigger');
+            const cartItemsList = document.getElementById('cart-items-list');
+            const cartCalculatedTotal = document.getElementById('cart-calculated-total');
 
             function loadProducts(filteredProducts = products) {
                 if (!gridDisplay) return;
@@ -296,29 +456,94 @@
                         <div>
                             <h3 class="product-title" style="cursor: pointer;">${item.title}</h3>
                             <div class="product-rating">${item.rating}</div>
-                            <div class="product-price">${item.price}</div>
+                            <div class="product-price">${item.priceText}</div>
                         </div>
                         <button class="add-to-cart-btn">Add to Cart</button>
                     `;
 
-                    card.querySelector('.product-img').addEventListener('click', () => {
-                        window.open(item.link, '_blank');
-                    });
-                    
-                    card.querySelector('.product-title').addEventListener('click', () => {
-                        window.open(item.link, '_blank');
-                    });
+                    card.querySelector('.product-img').addEventListener('click', () => window.open(item.link, '_blank'));
+                    card.querySelector('.product-title').addEventListener('click', () => window.open(item.link, '_blank'));
                     
                     card.querySelector('.add-to-cart-btn').addEventListener('click', () => {
-                        currentCartCount++;
-                        if (cartCountBadge) cartCountBadge.textContent = currentCartCount;
+                        addItemToCart(item);
                     });
 
                     gridDisplay.appendChild(card);
                 });
             }
 
-            // Dual Filtering Logic: Handles combining search values and active category types together
+            // NEW: Cart Functional Operations
+            function addItemToCart(productItem) {
+                userShoppingCart.push(productItem);
+                updateCartUI();
+            }
+
+            function removeItemFromCart(indexPosition) {
+                userShoppingCart.splice(indexPosition, 1);
+                updateCartUI();
+            }
+
+            function updateCartUI() {
+                // Update badge numbers
+                if (cartCountBadge) cartCountBadge.textContent = userShoppingCart.length;
+                
+                if (!cartItemsList) return;
+                cartItemsList.innerHTML = "";
+                
+                if (userShoppingCart.length === 0) {
+                    cartItemsList.innerHTML = `<p class="empty-cart-text">Your cart is completely empty.</p>`;
+                    if (cartCalculatedTotal) cartCalculatedTotal.textContent = "₹0.00";
+                    return;
+                }
+                
+                let cumulativeTotal = 0;
+                
+                userShoppingCart.forEach((item, index) => {
+                    cumulativeTotal += item.priceValue;
+                    
+                    const itemRow = document.createElement('div');
+                    itemRow.className = 'cart-item';
+                    itemRow.innerHTML = `
+                        <img src="${item.img}" class="cart-item-img" alt="${item.title}">
+                        <div class="cart-item-details">
+                            <div class="cart-item-title">${item.title}</div>
+                            <div class="cart-item-price">${item.priceText}</div>
+                            <button class="remove-item-btn" data-index="${index}">Remove</button>
+                        </div>
+                    `;
+                    
+                    itemRow.querySelector('.remove-item-btn').addEventListener('click', () => {
+                        removeItemFromCart(index);
+                    });
+                    
+                    cartItemsList.appendChild(itemRow);
+                });
+                
+                if (cartCalculatedTotal) {
+                    cartCalculatedTotal.textContent = "₹" + cumulativeTotal.toLocaleString('en-IN') + ".00";
+                }
+            }
+
+            // Drawer Panel Visibility Handlers
+            function openCartDrawer() {
+                if (drawerElement && overlayElement) {
+                    drawerElement.classList.add('open');
+                    overlayElement.classList.add('show');
+                }
+            }
+
+            function closeCartDrawer() {
+                if (drawerElement && overlayElement) {
+                    drawerElement.classList.remove('open');
+                    overlayElement.classList.remove('show');
+                }
+            }
+
+            if (openCartTrigger) openCartTrigger.addEventListener('click', openCartDrawer);
+            if (closeCartTrigger) closeCartTrigger.addEventListener('click', closeCartDrawer);
+            if (overlayElement) overlayElement.addEventListener('click', closeCartDrawer);
+
+            // Filtering Catalog Logic
             function filterCatalog() {
                 if (!searchInput) return;
                 const query = searchInput.value.toLowerCase().trim();
@@ -332,25 +557,18 @@
                 loadProducts(matched);
             }
 
-            // Manage Category Button States & Clicks
             if (categoryStrip) {
                 categoryStrip.addEventListener('click', (e) => {
                     if (e.target.classList.contains('category-btn')) {
-                        // Reset previous active button styles
                         categoryStrip.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
-                        
-                        // Set new active selection target
                         e.target.classList.add('active');
                         activeCategory = e.target.getAttribute('data-category');
-                        
                         filterCatalog();
                     }
                 });
             }
 
-            if (searchButton) {
-                searchButton.addEventListener('click', filterCatalog);
-            }
+            if (searchButton) searchButton.addEventListener('click', filterCatalog);
             if (searchInput) {
                 searchInput.addEventListener('keyup', (e) => {
                     if (e.key === 'Enter') filterCatalog();
@@ -362,7 +580,6 @@
                     if (searchInput) searchInput.value = "";
                     activeCategory = "all";
                     
-                    // Reset styling focus back to 'All' button choice
                     if (categoryStrip) {
                         categoryStrip.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
                         categoryStrip.querySelector('[data-category="all"]').classList.add('active');
