@@ -73,6 +73,15 @@
             gap: 20px;
             color: white;
         }
+        .nav-item-link {
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+            border-bottom: 1px dashed transparent;
+        }
+        .nav-item-link:hover {
+            border-bottom-color: white;
+        }
         .cart-box {
             display: flex;
             align-items: center;
@@ -118,6 +127,14 @@
             max-width: 1250px;
             margin: -60px auto 40px auto;
             padding: 0 20px;
+        }
+
+        /* SPA View Wrappers */
+        .spa-view {
+            display: none;
+        }
+        .spa-view.active-view {
+            display: block;
         }
         
         .category-container {
@@ -210,6 +227,97 @@
             color: #666;
             background: var(--card-white);
             border-radius: 8px;
+        }
+
+        /* NEW VIEW STYLES: Product Details View Layout */
+        .details-wrapper {
+            background: var(--card-white);
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .details-left {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #fafafa;
+            border-radius: 6px;
+            padding: 20px;
+        }
+        .details-img {
+            max-width: 100%;
+            max-height: 350px;
+            object-fit: contain;
+        }
+        .details-right {
+            flex: 1.2;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .back-home-link {
+            display: inline-flex;
+            align-items: center;
+            color: #007185;
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 15px;
+            cursor: pointer;
+        }
+        .back-home-link:hover {
+            color: #c45500;
+            text-decoration: underline;
+        }
+        .affiliate-badge {
+            background: #e7f4f5;
+            color: #005a66;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 4px;
+            align-self: flex-start;
+        }
+
+        /* NEW VIEW STYLES: Orders Hub Tracker Layout */
+        .orders-container {
+            background: var(--card-white);
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-top: 20px;
+        }
+        .order-card-row {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        .order-card-header {
+            background: #f6f6f6;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-size: 14px;
+            border-bottom: 1px solid #ddd;
+        }
+        .order-card-body {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .order-status-badge {
+            color: #2e7d32;
+            font-weight: bold;
         }
 
         /* Cart Slide Drawer Panel styles */
@@ -379,7 +487,7 @@
             display: block;
         }
 
-        /* NEW FEATURE: Checkout Modal Window Styles */
+        /* Checkout Modal Window Styles */
         .modal-view-panel {
             position: fixed;
             top: 50%;
@@ -510,7 +618,7 @@
                 <button class="search-btn" id="search-button">Search</button>
             </div>
             <div class="nav-links">
-                <div>Hello, Sign In</div>
+                <span class="nav-item-link" id="orders-hub-trigger">Track Orders</span>
                 <div class="cart-box" id="open-cart-trigger">
                     <span id="cart-count">0</span><span>Cart</span>
                 </div>
@@ -518,7 +626,8 @@
         </div>
     </header>
 
-    <div class="hero">
+    <!-- Hero container block (Only visible on Home catalog grid view) -->
+    <div class="hero" id="promo-hero-banner">
         <div class="hero-text">
             <h2>Welcome to ZetaMart</h2>
             <p>Explore elite gear, custom gadgets, and daily essentials.</p>
@@ -526,16 +635,37 @@
     </div>
 
     <main class="main-container">
-        <div class="category-container" id="category-strip">
-            <button class="category-btn active" data-category="all">All Products</button>
-            <button class="category-btn" data-category="electronics">Electronics</button>
-            <button class="category-btn" data-category="books">Books & Stationery</button>
-            <button class="category-btn" data-category="skincare">Skincare & Beauty</button>
-            <button class="category-btn" data-category="fashion">Fashion & Bags</button>
-            <button class="category-btn" data-category="home">Home & Lifestyle</button>
+        
+        <!-- SPA VIEW 1: Home Catalog View Dashboard -->
+        <div id="view-home" class="spa-view active-view">
+            <div class="category-container" id="category-strip">
+                <button class="category-btn active" data-category="all">All Products</button>
+                <button class="category-btn" data-category="electronics">Electronics</button>
+                <button class="category-btn" data-category="books">Books & Stationery</button>
+                <button class="category-btn" data-category="skincare">Skincare & Beauty</button>
+                <button class="category-btn" data-category="fashion">Fashion & Bags</button>
+                <button class="category-btn" data-category="home">Home & Lifestyle</button>
+            </div>
+            <div class="product-grid" id="grid-display"></div>
         </div>
 
-        <div class="product-grid" id="grid-display"></div>
+        <!-- SPA VIEW 2: Deep Product Showcase Detail View -->
+        <div id="view-details" class="spa-view">
+            <a class="back-home-link" id="details-back-btn">← Back to shopping directory</a>
+            <div class="details-wrapper" id="details-root-container"></div>
+        </div>
+
+        <!-- SPA VIEW 3: Historical Tracking Orders Hub -->
+        <div id="view-orders" class="spa-view">
+            <a class="back-home-link" id="orders-back-btn">← Back to shopping directory</a>
+            <div class="orders-container">
+                <h2 style="margin-bottom: 20px;">Your Simulated Order Vault</h2>
+                <div id="orders-stack-list">
+                    <p style="color: #666;">No historical order receipts processed yet.</p>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <!-- Cart Drawer Elements -->
@@ -560,21 +690,20 @@
         </div>
     </div>
 
-    <!-- NEW FEATURE: Checkout Modal Popup -->
+    <!-- Checkout Modal Popup -->
     <div class="modal-view-panel" id="checkout-modal">
         <div class="modal-header">
             <h3>Secure Checkout</h3>
             <button class="close-modal-btn" id="close-modal-trigger">&times;</button>
         </div>
         
-        <!-- Form View Section -->
         <form id="checkout-form" class="modal-body">
             <div class="input-group">
                 <label for="customer-name">Full Name</label>
                 <input type="text" id="customer-name" required placeholder="Enter your full name">
             </div>
             <div class="input-group">
-                <label for="customer-address">Shipping AddressLabel</label>
+                <label for="customer-address">Shipping Address</label>
                 <textarea id="customer-address" rows="3" required placeholder="Enter your full delivery address"></textarea>
             </div>
             <div class="order-summary-row">
@@ -584,14 +713,13 @@
             <button type="submit" class="place-order-btn">Place Your Order</button>
         </form>
 
-        <!-- Success Confirmation Section -->
         <div class="success-screen" id="order-success-screen">
             <div class="success-icon">✓</div>
             <h2>Order Placed Successfully!</h2>
             <p>Thank you for shopping at ZetaMart. Your parcel will be processed shortly.</p>
             <div>
                 <div style="font-size: 13px; color: #666;">ZetaTrack ID:</div>
-                <div class="tracking-code" id="generated-tracking-id">ZM-849201-IN</div>
+                <div class="tracking-code" id="generated-tracking-id">ZM-000000-IN</div>
             </div>
         </div>
     </div>
@@ -625,8 +753,9 @@
 
             // Core State Tracking Variables
             let userShoppingCart = JSON.parse(localStorage.getItem('zetaCartData')) || [];
+            let recordedOrders = JSON.parse(localStorage.getItem('zetaOrderHistory')) || [];
             let activeCategory = "all";
-            let globalCartTotal = 0; // Tracks absolute cost globally
+            let globalCartTotal = 0;
             
             // DOM Selections
             const gridDisplay = document.getElementById('grid-display');
@@ -635,7 +764,18 @@
             const searchButton = document.getElementById('search-button');
             const logoButton = document.getElementById('logo-btn');
             const categoryStrip = document.getElementById('category-strip');
+            const promoHeroBanner = document.getElementById('promo-hero-banner');
             
+            // SPA Navigation Containers
+            const spaViews = document.querySelectorAll('.spa-view');
+            const detailsRootContainer = document.getElementById('details-root-container');
+            const ordersStackList = document.getElementById('orders-stack-list');
+            
+            // SPA Navigation Targets
+            const ordersHubTrigger = document.getElementById('orders-hub-trigger');
+            const detailsBackBtn = document.getElementById('details-back-btn');
+            const ordersBackBtn = document.getElementById('orders-back-btn');
+
             // Drawer Panel Selections
             const drawerElement = document.getElementById('shopping-cart-drawer');
             const overlayElement = document.getElementById('cart-screen-overlay');
@@ -645,7 +785,7 @@
             const cartItemsList = document.getElementById('cart-items-list');
             const cartCalculatedTotal = document.getElementById('cart-calculated-total');
 
-            // Modal View Node Selections
+            // Modal Node Selections
             const checkoutDrawerBtn = document.getElementById('checkout-drawer-btn');
             const checkoutModal = document.getElementById('checkout-modal');
             const closeModalTrigger = document.getElementById('close-modal-trigger');
@@ -654,6 +794,92 @@
             const modalCheckoutTotal = document.getElementById('modal-checkout-total');
             const generatedTrackingId = document.getElementById('generated-tracking-id');
 
+            // --- SPA ROUTER SYSTEM ---
+            function navigateToView(viewId) {
+                spaViews.forEach(view => {
+                    view.classList.remove('active-view');
+                });
+                document.getElementById(viewId).classList.add('active-view');
+
+                // Toggle Hero banner visibility based on active view state
+                if (viewId === 'view-home') {
+                    promoHeroBanner.style.display = "flex";
+                } else {
+                    promoHeroBanner.style.display = "none";
+                }
+                window.scrollTo(0,0);
+            }
+
+            function openProductDetails(productObj) {
+                if (!detailsRootContainer) return;
+                
+                detailsRootContainer.innerHTML = `
+                    <div class="details-left">
+                        <img src="${productObj.img}" class="details-img" alt="${productObj.title}">
+                    </div>
+                    <div class="details-right">
+                        <span class="affiliate-badge">Verified Affiliate Link</span>
+                        <h1 style="font-size: 24px;">${productObj.title}</h1>
+                        <div class="product-rating" style="font-size: 16px;">${productObj.rating}</div>
+                        <hr style="border: 0; border-top: 1px solid #ddd; margin: 10px 0;">
+                        <div style="font-size: 14px; color: #555;">M.R.P. value listed:</div>
+                        <div style="font-size: 28px; font-weight: bold; color: #b12704;">${productObj.priceText}</div>
+                        <p style="font-size: 14px; line-height: 1.5; color: #444;">
+                            Experience exceptional craftsmanship and design. This premium item is curated to bring performance, style, and complete utility right to your lifestyle framework.
+                        </p>
+                        <div style="margin-top: 15px; display: flex; gap: 15px;">
+                            <button id="details-add-cart-btn" class="add-to-cart-btn" style="padding: 12px; width: 200px;">Add to Shopping Cart</button>
+                            <a href="${productObj.link}" target="_blank" class="checkout-btn" style="padding: 12px; width: 200px; text-decoration: none; color: black; background-color: #e2e4e6; border-color: #adb1b8;">View on Amazon</a>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('details-add-cart-btn').addEventListener('click', () => {
+                    addItemToCart(productObj);
+                });
+
+                navigateToView('view-details');
+            }
+
+            function renderOrdersHub() {
+                if (!ordersStackList) return;
+                ordersStackList.innerHTML = "";
+
+                if (recordedOrders.length === 0) {
+                    ordersStackList.innerHTML = `<p style="color: #666; text-align: center; padding: 20px;">You haven't checked out any orders yet.</p>`;
+                    return;
+                }
+
+                recordedOrders.forEach(order => {
+                    const card = document.createElement('div');
+                    card.className = "order-card-row";
+                    card.innerHTML = `
+                        <div class="order-card-header">
+                            <div><strong>ORDER PLACED:</strong> ${order.date}</div>
+                            <div><strong>TOTAL:</strong> ₹${order.total.toLocaleString('en-IN')}.00</div>
+                            <div><strong>SHIP TO:</strong> ${order.name}</div>
+                            <div><strong>TRACKING ID:</strong> <span style="font-family: monospace;">${order.trackingId}</span></div>
+                        </div>
+                        <div class="order-card-body">
+                            <div>Ordered <strong style="color: var(--light-blue);">${order.itemCount} items</strong> from the storefront listing.</div>
+                            <div class="order-status-badge">Package Processing Status: Active</div>
+                        </div>
+                    `;
+                    ordersStackList.appendChild(card);
+                });
+            }
+
+            // Wire routing triggers
+            if (ordersHubTrigger) {
+                ordersHubTrigger.addEventListener('click', () => {
+                    renderOrdersHub();
+                    navigateToView('view-orders');
+                });
+            }
+            if (detailsBackBtn) detailsBackBtn.addEventListener('click', () => navigateToView('view-home'));
+            if (ordersBackBtn) ordersBackBtn.addEventListener('click', () => navigateToView('view-home'));
+
+            // --- PRODUCT GRID LOGIC ---
             function loadProducts(filteredProducts = products) {
                 if (!gridDisplay) return;
                 gridDisplay.innerHTML = ""; 
@@ -677,8 +903,9 @@
                         <button class="add-to-cart-btn">Add to Cart</button>
                     `;
 
-                    card.querySelector('.product-img').addEventListener('click', () => window.open(item.link, '_blank'));
-                    card.querySelector('.product-title').addEventListener('click', () => window.open(item.link, '_blank'));
+                    // Direct routing integration to showcase full product pages
+                    card.querySelector('.product-img').addEventListener('click', () => openProductDetails(item));
+                    card.querySelector('.product-title').addEventListener('click', () => openProductDetails(item));
                     
                     card.querySelector('.add-to-cart-btn').addEventListener('click', () => {
                         addItemToCart(item);
@@ -688,16 +915,14 @@
                 });
             }
 
-            // Cart Functional Operations
+            // --- CART LOGIC ---
             function addItemToCart(productItem) {
                 const existingItem = userShoppingCart.find(cartItem => cartItem.id === productItem.id);
-                
                 if (existingItem) {
                     existingItem.quantity += 1;
                 } else {
                     userShoppingCart.push({ ...productItem, quantity: 1 });
                 }
-                
                 updateCartUI();
             }
 
@@ -710,7 +935,6 @@
                 if (targetItem.quantity <= 0) {
                     userShoppingCart = userShoppingCart.filter(cartItem => cartItem.id !== productId);
                 }
-
                 updateCartUI();
             }
 
@@ -774,7 +998,7 @@
                 }
             }
 
-            // Drawer Panel Visibility Handlers
+            // --- DRAWER PANEL MANAGEMENT ---
             function openCartDrawer() {
                 if (drawerElement && overlayElement) {
                     drawerElement.classList.add('open');
@@ -789,26 +1013,18 @@
                 }
             }
 
-            // NEW FUNCTIONALITY: Modal View Open/Close Handlers
             function openCheckoutModal() {
                 if (userShoppingCart.length === 0) {
                     alert("Please add items to your cart before checking out!");
                     return;
                 }
-                
-                // Hide drawer layout panel first, but leave shading overlay active
                 if (drawerElement) drawerElement.classList.remove('open');
                 if (overlayElement) overlayElement.classList.add('show');
-                
-                // Set form totals
                 if (modalCheckoutTotal) {
                     modalCheckoutTotal.textContent = "₹" + globalCartTotal.toLocaleString('en-IN') + ".00";
                 }
-                
-                // Reset screen states inside form panel
                 if (checkoutForm) checkoutForm.style.display = "flex";
                 if (orderSuccessScreen) orderSuccessScreen.style.display = "none";
-                
                 if (checkoutModal) checkoutModal.classList.add('active');
             }
 
@@ -820,12 +1036,9 @@
             if (openCartTrigger) openCartTrigger.addEventListener('click', openCartDrawer);
             if (closeCartTrigger) closeCartTrigger.addEventListener('click', closeCartDrawer);
             if (clearCartTrigger) clearCartTrigger.addEventListener('click', clearEntireCart);
-            
-            // Wire checkout buttons
             if (checkoutDrawerBtn) checkoutDrawerBtn.addEventListener('click', openCheckoutModal);
             if (closeModalTrigger) closeModalTrigger.addEventListener('click', closeCheckoutModal);
             
-            // Allow clicking background shade element to dismiss everything
             if (overlayElement) {
                 overlayElement.addEventListener('click', () => {
                     closeCartDrawer();
@@ -833,26 +1046,38 @@
                 });
             }
 
-            // NEW FUNCTIONALITY: Process checkout submission simulation
+            // CHECKOUT ORDER RETENTION LOGIC
             if (checkoutForm) {
                 checkoutForm.addEventListener('submit', (e) => {
-                    e.preventDefault(); // Stop normal web page transitions
+                    e.preventDefault();
                     
-                    // Generate a random mock tracking string
                     const randomId = Math.floor(100000 + Math.random() * 900000);
-                    if (generatedTrackingId) generatedTrackingId.textContent = `ZM-${randomId}-IN`;
+                    const orderTrackingCode = `ZM-${randomId}-IN`;
+                    if (generatedTrackingId) generatedTrackingId.textContent = orderTrackingCode;
                     
-                    // Toggle form visibility screens
+                    const newOrder = {
+                        trackingId: orderTrackingCode,
+                        name: document.getElementById('customer-name').value,
+                        address: document.getElementById('customer-address').value,
+                        total: globalCartTotal,
+                        itemCount: userShoppingCart.reduce((sum, item) => sum + item.quantity, 0),
+                        date: new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })
+                    };
+
+                    // Cache structural values back down to array cache
+                    recordedOrders.unshift(newOrder);
+                    localStorage.setItem('zetaOrderHistory', JSON.stringify(recordedOrders));
+
                     checkoutForm.style.display = "none";
                     if (orderSuccessScreen) orderSuccessScreen.style.display = "flex";
                     
-                    // Wipe shopping carts down clean now that order is simulated
                     userShoppingCart = [];
                     updateCartUI();
+                    checkoutForm.reset();
                 });
             }
 
-            // Filtering Catalog Logic
+            // --- FILTERING CATALOG LOGIC ---
             function filterCatalog() {
                 if (!searchInput) return;
                 const query = searchInput.value.toLowerCase().trim();
@@ -863,6 +1088,7 @@
                     return matchesSearch && matchesCategory;
                 });
                 
+                navigateToView('view-home');
                 loadProducts(matched);
             }
 
@@ -894,6 +1120,7 @@
                         categoryStrip.querySelector('[data-category="all"]').classList.add('active');
                     }
                     
+                    navigateToView('view-home');
                     loadProducts(products);
                 });
             }
