@@ -85,6 +85,10 @@
         .cart-box:hover {
             border: 1px solid white;
         }
+        /* Make inner spans ignore click targeting so it bubbles up to the main box correctly */
+        .cart-box span {
+            pointer-events: none;
+        }
         #cart-count {
             background-color: var(--zeta-gold);
             color: var(--main-blue);
@@ -209,7 +213,7 @@
             border-radius: 8px;
         }
 
-        /* NEW: Cart Slide Drawer Panel styles */
+        /* Cart Slide Drawer Panel styles */
         .cart-drawer {
             position: fixed;
             top: 0;
@@ -371,7 +375,7 @@
         <div class="product-grid" id="grid-display"></div>
     </main>
 
-    <!-- NEW: Cart Drawer Elements -->
+    <!-- Cart Drawer Elements -->
     <div class="cart-overlay" id="cart-screen-overlay"></div>
     <div class="cart-drawer" id="shopping-cart-drawer">
         <div class="cart-header">
@@ -379,7 +383,6 @@
             <button class="close-cart-btn" id="close-cart-trigger">&times;</button>
         </div>
         <div class="cart-items-container" id="cart-items-list">
-            <!-- Dynamic items populate here -->
             <p class="empty-cart-text">Your cart is completely empty.</p>
         </div>
         <div class="cart-footer">
@@ -413,7 +416,7 @@
                 { id: 17, category: "electronics", title: "Logitech M350s Wireless Mouse", priceText: "₹599.00", priceValue: 599, rating: "★★★★☆ (4.3)", img: "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B01Cxmp2z" },
                 { id: 18, category: "electronics", title: "Portronics Konnect L 1.2m Fast Charging Cable", priceText: "₹160.00", priceValue: 160, rating: "★★★★☆ (4.1)", img: "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0hitkiqE" },
                 { id: 19, category: "electronics", title: "TP-Link Tapio Smart Wi-Fi Plug", priceText: "₹999.00", priceValue: 999, rating: "★★★★★ (4.5)", img: "https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0iZOYBnI" },
-                { id: 20, category: "books", title: "Percy Jackson and the Olympians (5-Book Boxed Set)", priceText: "₹1,950.00", priceValue: 1,950, rating: "★★★★★ (4.8)", img: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0iekYu09" },
+                { id: 20, category: "books", title: "Percy Jackson and the Olympians (5-Book Boxed Set)", priceText: "₹1,950.00", priceValue: 1950, rating: "★★★★★ (4.8)", img: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0iekYu09" },
                 { id: 21, category: "books", title: "Brustro Artist Watercolor Pad (300 GSM, 25% Cotton)", priceText: "₹438.00", priceValue: 438, rating: "★★★★★ (5.0)", img: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0e6qPTHa" },
                 { id: 22, category: "books", title: "Arteza Expert Premium Watercolor Pencils (Set of 48/72)", priceText: "₹1,999.00", priceValue: 1999, rating: "★★★★★ (4.7)", img: "https://images.unsplash.com/photo-1519751138087-5bf79df62d5b?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0hNeYf4N" }
             ];
@@ -472,7 +475,7 @@
                 });
             }
 
-            // NEW: Cart Functional Operations
+            // Cart Functional Operations
             function addItemToCart(productItem) {
                 userShoppingCart.push(productItem);
                 updateCartUI();
@@ -484,7 +487,6 @@
             }
 
             function updateCartUI() {
-                // Update badge numbers
                 if (cartCountBadge) cartCountBadge.textContent = userShoppingCart.length;
                 
                 if (!cartItemsList) return;
