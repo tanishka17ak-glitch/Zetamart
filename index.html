@@ -18,6 +18,7 @@
             --zeta-amber: #febd69;
             --bg-gray: #eaeded;
             --card-white: #ffffff;
+            --success-green: #2e7d32;
         }
         body {
             background-color: var(--bg-gray);
@@ -229,7 +230,7 @@
             border-radius: 8px;
         }
 
-        /* NEW VIEW STYLES: Product Details View Layout */
+        /* Product Details View Layout */
         .details-wrapper {
             background: var(--card-white);
             border-radius: 8px;
@@ -285,7 +286,42 @@
             align-self: flex-start;
         }
 
-        /* NEW VIEW STYLES: Orders Hub Tracker Layout */
+        /* Reviews Section */
+        .reviews-section {
+            background: var(--card-white);
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-top: 25px;
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+        .review-form-box {
+            flex: 1;
+            min-width: 280px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .review-list-box {
+            flex: 1.5;
+            min-width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .review-card {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 12px;
+        }
+        .review-meta {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        /* Orders Hub Tracker Layout */
         .orders-container {
             background: var(--card-white);
             border-radius: 8px;
@@ -316,7 +352,7 @@
             align-items: center;
         }
         .order-status-badge {
-            color: #2e7d32;
+            color: var(--success-green);
             font-weight: bold;
         }
 
@@ -544,24 +580,67 @@
             font-weight: 600;
             color: #444;
         }
-        .input-group input, .input-group textarea {
+        .input-group input, .input-group textarea, .input-group select {
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
             font-size: 15px;
             outline: none;
         }
-        .input-group input:focus, .input-group textarea:focus {
+        .input-group input:focus, .input-group textarea:focus, .input-group select:focus {
             border-color: var(--zeta-gold);
         }
+
+        /* NEW STYLES: Coupon Prompt Row */
+        .coupon-wrapper {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+        .coupon-input {
+            flex: 1;
+            text-transform: uppercase;
+        }
+        .apply-coupon-btn {
+            background-color: var(--light-blue);
+            color: white;
+            border: none;
+            padding: 0 15px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .apply-coupon-btn:hover {
+            background-color: var(--main-blue);
+        }
+        .coupon-status-msg {
+            font-size: 13px;
+            font-weight: 500;
+            display: none;
+        }
+
         .order-summary-row {
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            gap: 6px;
             background-color: #f7f9fa;
             padding: 12px;
             border-radius: 4px;
             font-weight: 600;
             border: 1px solid #e7e9ec;
+        }
+        .summary-line {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #555;
+        }
+        .summary-line.grand-total {
+            font-size: 16px;
+            color: #000;
+            border-top: 1px dashed #ccc;
+            padding-top: 6px;
+            margin-top: 4px;
         }
         .place-order-btn {
             background-color: var(--zeta-amber);
@@ -587,7 +666,7 @@
         }
         .success-icon {
             font-size: 50px;
-            color: #2e7d32;
+            color: var(--success-green);
             background-color: #e8f5e9;
             width: 80px;
             height: 80px;
@@ -605,6 +684,39 @@
             font-size: 16px;
             letter-spacing: 1px;
             margin-top: 5px;
+        }
+
+        /* Toast Alert Notifications Container */
+        .toast-notifications-box {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .toast-notification-card {
+            background-color: var(--main-blue);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            border-left: 4px solid var(--zeta-gold);
+            font-size: 14px;
+            font-weight: 500;
+            min-width: 250px;
+            max-width: 350px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            pointer-events: auto;
+            transform: translateX(-120%);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .toast-notification-card.toast-slide-in {
+            transform: translateX(0);
         }
     </style>
 </head>
@@ -626,11 +738,13 @@
         </div>
     </header>
 
-    <!-- Hero container block (Only visible on Home catalog grid view) -->
+    <div class="toast-notifications-box" id="toast-wrapper"></div>
+
     <div class="hero" id="promo-hero-banner">
         <div class="hero-text">
             <h2>Welcome to ZetaMart</h2>
             <p>Explore elite gear, custom gadgets, and daily essentials.</p>
+            <p style="font-size: 12px; margin-top: 8px; color: #555; font-weight: 600;">💡 Try promo codes: <span style="color:#c45500">ZETA10</span> or <span style="color:#c45500">BIOSTUDENT</span></p>
         </div>
     </div>
 
@@ -653,6 +767,38 @@
         <div id="view-details" class="spa-view">
             <a class="back-home-link" id="details-back-btn">← Back to shopping directory</a>
             <div class="details-wrapper" id="details-root-container"></div>
+            
+            <!-- Dynamic Reviews Hub -->
+            <div class="reviews-section">
+                <div class="review-form-box">
+                    <h3>Write a Product Review</h3>
+                    <form id="product-review-form">
+                        <div class="input-group">
+                            <label for="review-author">Your Name</label>
+                            <input type="text" id="review-author" required placeholder="e.g. Alex M.">
+                        </div>
+                        <div class="input-group">
+                            <label for="review-rating">Rating</label>
+                            <select id="review-rating" required>
+                                <option value="5">★★★★★ (5 Stars)</option>
+                                <option value="4">★★★★☆ (4 Stars)</option>
+                                <option value="3">★★★☆☆ (3 Stars)</option>
+                                <option value="2">★★☆☆☆ (2 Stars)</option>
+                                <option value="1">★☆☆☆☆ (1 Star)</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="review-text">Review Comments</label>
+                            <textarea id="review-text" rows="3" required placeholder="What did you like or dislike?"></textarea>
+                        </div>
+                        <button type="submit" class="place-order-btn" style="margin-top: 5px;">Submit Review</button>
+                    </form>
+                </div>
+                <div class="review-list-box">
+                    <h3>Community Verified Reviews</h3>
+                    <div id="review-items-stack" style="max-height: 300px; overflow-y: auto;"></div>
+                </div>
+            </div>
         </div>
 
         <!-- SPA VIEW 3: Historical Tracking Orders Hub -->
@@ -668,7 +814,6 @@
 
     </main>
 
-    <!-- Cart Drawer Elements -->
     <div class="cart-overlay" id="cart-screen-overlay"></div>
     <div class="cart-drawer" id="shopping-cart-drawer">
         <div class="cart-header">
@@ -690,28 +835,51 @@
         </div>
     </div>
 
-    <!-- Checkout Modal Popup -->
+    <!-- Checkout Modal Window Panel -->
     <div class="modal-view-panel" id="checkout-modal">
         <div class="modal-header">
             <h3>Secure Checkout</h3>
             <button class="close-modal-btn" id="close-modal-trigger">&times;</button>
         </div>
         
-        <form id="checkout-form" class="modal-body">
+        <div id="checkout-form-container" class="modal-body">
+            <form id="checkout-form" style="display: flex; flex-direction: column; gap: 15px;">
+                <div class="input-group">
+                    <label for="customer-name">Full Name</label>
+                    <input type="text" id="customer-name" required placeholder="Enter your full name">
+                </div>
+                <div class="input-group">
+                    <label for="customer-address">Shipping Address</label>
+                    <textarea id="customer-address" rows="2" required placeholder="Enter your full delivery address"></textarea>
+                </div>
+            </form>
+
+            <!-- NEW ELEMENT: Promo Coupon Core Wrapper -->
             <div class="input-group">
-                <label for="customer-name">Full Name</label>
-                <input type="text" id="customer-name" required placeholder="Enter your full name">
+                <label for="coupon-code-input">Have a Promo Code?</label>
+                <div class="coupon-wrapper">
+                    <input type="text" id="coupon-code-input" class="coupon-input" placeholder="e.g. ZETA10">
+                    <button type="button" id="apply-coupon-btn" class="apply-coupon-btn">Apply</button>
+                </div>
+                <div id="coupon-status-msg" class="coupon-status-msg"></div>
             </div>
-            <div class="input-group">
-                <label for="customer-address">Shipping Address</label>
-                <textarea id="customer-address" rows="3" required placeholder="Enter your full delivery address"></textarea>
-            </div>
+
             <div class="order-summary-row">
-                <span>Total Amount Due:</span>
-                <span id="modal-checkout-total">₹0.00</span>
+                <div class="summary-line">
+                    <span>Cart Subtotal:</span>
+                    <span id="modal-subtotal-value">₹0.00</span>
+                </div>
+                <div class="summary-line" id="discount-summary-row" style="display: none; color: var(--success-green);">
+                    <span>Coupon Discount:</span>
+                    <span id="modal-discount-value">-₹0.00</span>
+                </div>
+                <div class="summary-line grand-total">
+                    <span>Total Amount Due:</span>
+                    <span id="modal-checkout-total">₹0.00</span>
+                </div>
             </div>
-            <button type="submit" class="place-order-btn">Place Your Order</button>
-        </form>
+            <button type="button" id="submit-order-btn" class="place-order-btn">Place Your Order</button>
+        </div>
 
         <div class="success-screen" id="order-success-screen">
             <div class="success-icon">✓</div>
@@ -735,7 +903,7 @@
                 { id: 6, category: "fashion", title: "Ray-Ban Classic Aviator Sunglasses", priceText: "₹10,990.00", priceValue: 10990, rating: "★★★★★ (4.8)", img: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0cPaAJma" },
                 { id: 7, category: "skincare", title: "Cetaphil Moisturising Lotion (250ml)", priceText: "₹2,316.00", priceValue: 2316, rating: "★★★★★ (4.6)", img: "https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&w=600&q=80", link: "https://link.amazon/B0ivKpGaS" },
                 { id: 8, category: "skincare", title: "Cetaphil Sun SPF 50+ Light Sunscreen Gel", priceText: "₹3,212.00", priceValue: 3212, rating: "★★★★★ (4.7)", img: "https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B08rY5SZn" },
-                { id: 9, category: "skincare", title: "Cetaphil Bright Healthy Radiance Face Serum", priceText: "₹2,267.00", priceValue: 2267, rating: "★★★★☆ (4.4)", img: "Capture.PNG", link: "https://link.amazon/B0he4J0P9" },
+                { id: 9, category: "skincare", title: "Cetaphil Bright Healthy Radiance Face Serum", priceText: "₹2,267.00", priceValue: 2267, rating: "★★★★☆ (4.4)", img: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0he4J0P9" },
                 { id: 10, category: "home", title: "Minimalist Floating Bookshelf (Set of 3)", priceText: "₹2,499.00", priceValue: 2499, rating: "★★★★★ (4.6)", img: "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0cotnWEd" },
                 { id: 11, category: "books", title: "Classic Novel Collection (Hardcover Set)", priceText: "₹1,899.00", priceValue: 1899, rating: "★★★★★ (4.9)", img: "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0fTVdy7C" },
                 { id: 12, category: "fashion", title: "Coach Luxury Canvas Crossbody Shoulder Bag", priceText: "₹29,500.00", priceValue: 29500, rating: "★★★★★ (4.8)", img: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0byFw1Uo" },
@@ -754,8 +922,19 @@
             // Core State Tracking Variables
             let userShoppingCart = JSON.parse(localStorage.getItem('zetaCartData')) || [];
             let recordedOrders = JSON.parse(localStorage.getItem('zetaOrderHistory')) || [];
+            let storedReviews = JSON.parse(localStorage.getItem('zetaProductReviews')) || {};
             let activeCategory = "all";
             let globalCartTotal = 0;
+            let currentOpenProductId = null;
+
+            // NEW STATE: Coupon System Variables
+            let activelyAppliedDiscount = 0;
+            let activelyAppliedCouponCode = "";
+            const verifiedCoupons = {
+                "ZETA10": 0.10,      // 10% Flat Discount
+                "BIOSTUDENT": 0.25,  // 25% Bio-Sci Special Discount
+                "ALPHAEXPERT": 0.15  // 15% Expert Gear Discount
+            };
             
             // DOM Selections
             const gridDisplay = document.getElementById('grid-display');
@@ -765,11 +944,14 @@
             const logoButton = document.getElementById('logo-btn');
             const categoryStrip = document.getElementById('category-strip');
             const promoHeroBanner = document.getElementById('promo-hero-banner');
+            const toastWrapper = document.getElementById('toast-wrapper');
             
             // SPA Navigation Containers
             const spaViews = document.querySelectorAll('.spa-view');
             const detailsRootContainer = document.getElementById('details-root-container');
             const ordersStackList = document.getElementById('orders-stack-list');
+            const reviewItemsStack = document.getElementById('review-items-stack');
+            const productReviewForm = document.getElementById('product-review-form');
             
             // SPA Navigation Targets
             const ordersHubTrigger = document.getElementById('orders-hub-trigger');
@@ -789,29 +971,56 @@
             const checkoutDrawerBtn = document.getElementById('checkout-drawer-btn');
             const checkoutModal = document.getElementById('checkout-modal');
             const closeModalTrigger = document.getElementById('close-modal-trigger');
+            const checkoutFormContainer = document.getElementById('checkout-form-container');
             const checkoutForm = document.getElementById('checkout-form');
             const orderSuccessScreen = document.getElementById('order-success-screen');
-            const modalCheckoutTotal = document.getElementById('modal-checkout-total');
             const generatedTrackingId = document.getElementById('generated-tracking-id');
+            const submitOrderBtn = document.getElementById('submit-order-btn');
+
+            // NEW DOM SELECTIONS: Coupon Engine Nodes
+            const couponCodeInput = document.getElementById('coupon-code-input');
+            const applyCouponBtn = document.getElementById('apply-coupon-btn');
+            const couponStatusMsg = document.getElementById('coupon-status-msg');
+            const modalSubtotalValue = document.getElementById('modal-subtotal-value');
+            const discountSummaryRow = document.getElementById('discount-summary-row');
+            const modalDiscountValue = document.getElementById('modal-discount-value');
+            const modalCheckoutTotal = document.getElementById('modal-checkout-total');
+
+            // --- TOAST NOTIFICATION SYSTEM ---
+            function showToastNotification(message) {
+                if (!toastWrapper) return;
+                
+                const card = document.createElement('div');
+                card.className = 'toast-notification-card';
+                card.innerHTML = `
+                    <span>${message}</span>
+                    <span style="cursor:pointer; font-weight:bold; margin-left:15px; color:var(--zeta-amber)">&times;</span>
+                `;
+                
+                card.querySelector('span:last-child').addEventListener('click', () => {
+                    card.remove();
+                });
+                
+                toastWrapper.appendChild(card);
+                setTimeout(() => card.classList.add('toast-slide-in'), 10);
+                
+                setTimeout(() => {
+                    card.classList.remove('toast-slide-in');
+                    setTimeout(() => card.remove(), 300);
+                }, 3000);
+            }
 
             // --- SPA ROUTER SYSTEM ---
             function navigateToView(viewId) {
-                spaViews.forEach(view => {
-                    view.classList.remove('active-view');
-                });
+                spaViews.forEach(view => view.classList.remove('active-view'));
                 document.getElementById(viewId).classList.add('active-view');
-
-                // Toggle Hero banner visibility based on active view state
-                if (viewId === 'view-home') {
-                    promoHeroBanner.style.display = "flex";
-                } else {
-                    promoHeroBanner.style.display = "none";
-                }
+                promoHeroBanner.style.display = (viewId === 'view-home') ? "flex" : "none";
                 window.scrollTo(0,0);
             }
 
             function openProductDetails(productObj) {
                 if (!detailsRootContainer) return;
+                currentOpenProductId = productObj.id;
                 
                 detailsRootContainer.innerHTML = `
                     <div class="details-left">
@@ -838,9 +1047,55 @@
                     addItemToCart(productObj);
                 });
 
+                renderProductReviews(productObj.id);
                 navigateToView('view-details');
             }
 
+            // --- PRODUCT REVIEWS ENGINE ---
+            function renderProductReviews(productId) {
+                if (!reviewItemsStack) return;
+                reviewItemsStack.innerHTML = "";
+                const productReviews = storedReviews[productId] || [];
+
+                if (productReviews.length === 0) {
+                    reviewItemsStack.innerHTML = `<p style="color: #777; font-size: 14px; padding: 10px 0;">No reviews written yet. Be the first to share your experience!</p>`;
+                    return;
+                }
+
+                productReviews.forEach(rev => {
+                    const stars = "★".repeat(parseInt(rev.rating)) + "☆".repeat(5 - parseInt(rev.rating));
+                    const div = document.createElement('div');
+                    div.className = "review-card";
+                    div.innerHTML = `
+                        <div class="review-meta"><strong>${rev.author}</strong> • ${rev.date}</div>
+                        <div style="color: #de7921; font-size: 13px; margin-bottom: 4px;">${stars}</div>
+                        <p style="font-size: 14px; color: #333;">${rev.text}</p>
+                    `;
+                    reviewItemsStack.appendChild(div);
+                });
+            }
+
+            if (productReviewForm) {
+                productReviewForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    if (!currentOpenProductId) return;
+
+                    const author = document.getElementById('review-author').value.trim();
+                    const rating = document.getElementById('review-rating').value;
+                    const text = document.getElementById('review-text').value.trim();
+                    const date = new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+
+                    if (!storedReviews[currentOpenProductId]) storedReviews[currentOpenProductId] = [];
+                    storedReviews[currentOpenProductId].unshift({ author, rating, text, date });
+                    localStorage.setItem('zetaProductReviews', JSON.stringify(storedReviews));
+
+                    renderProductReviews(currentOpenProductId);
+                    productReviewForm.reset();
+                    showToastNotification("⭐ Review submitted successfully!");
+                });
+            }
+
+            // --- ORDERS HISTORY HUB Vault ---
             function renderOrdersHub() {
                 if (!ordersStackList) return;
                 ordersStackList.innerHTML = "";
@@ -856,7 +1111,7 @@
                     card.innerHTML = `
                         <div class="order-card-header">
                             <div><strong>ORDER PLACED:</strong> ${order.date}</div>
-                            <div><strong>TOTAL:</strong> ₹${order.total.toLocaleString('en-IN')}.00</div>
+                            <div><strong>TOTAL SAVED VALUE:</strong> ₹${order.total.toLocaleString('en-IN')}.00</div>
                             <div><strong>SHIP TO:</strong> ${order.name}</div>
                             <div><strong>TRACKING ID:</strong> <span style="font-family: monospace;">${order.trackingId}</span></div>
                         </div>
@@ -869,7 +1124,6 @@
                 });
             }
 
-            // Wire routing triggers
             if (ordersHubTrigger) {
                 ordersHubTrigger.addEventListener('click', () => {
                     renderOrdersHub();
@@ -879,7 +1133,7 @@
             if (detailsBackBtn) detailsBackBtn.addEventListener('click', () => navigateToView('view-home'));
             if (ordersBackBtn) ordersBackBtn.addEventListener('click', () => navigateToView('view-home'));
 
-            // --- PRODUCT GRID LOGIC ---
+            // --- PRODUCT GRID DISPLAY LOGIC ---
             function loadProducts(filteredProducts = products) {
                 if (!gridDisplay) return;
                 gridDisplay.innerHTML = ""; 
@@ -892,7 +1146,6 @@
                 filteredProducts.forEach(item => {
                     const card = document.createElement('div');
                     card.className = 'product-card';
-                    
                     card.innerHTML = `
                         <img class="product-img" src="${item.img}" alt="${item.title}" style="cursor: pointer;">
                         <div>
@@ -903,19 +1156,15 @@
                         <button class="add-to-cart-btn">Add to Cart</button>
                     `;
 
-                    // Direct routing integration to showcase full product pages
                     card.querySelector('.product-img').addEventListener('click', () => openProductDetails(item));
                     card.querySelector('.product-title').addEventListener('click', () => openProductDetails(item));
-                    
-                    card.querySelector('.add-to-cart-btn').addEventListener('click', () => {
-                        addItemToCart(item);
-                    });
+                    card.querySelector('.add-to-cart-btn').addEventListener('click', () => addItemToCart(item));
 
                     gridDisplay.appendChild(card);
                 });
             }
 
-            // --- CART LOGIC ---
+            // --- CART CORE LOGIC ---
             function addItemToCart(productItem) {
                 const existingItem = userShoppingCart.find(cartItem => cartItem.id === productItem.id);
                 if (existingItem) {
@@ -924,14 +1173,13 @@
                     userShoppingCart.push({ ...productItem, quantity: 1 });
                 }
                 updateCartUI();
+                showToastNotification(`🛒 Added "${productItem.title.substring(0, 25)}..." to your cart!`);
             }
 
             function updateQuantity(productId, amount) {
                 const targetItem = userShoppingCart.find(cartItem => cartItem.id === productId);
                 if (!targetItem) return;
-
                 targetItem.quantity += amount;
-
                 if (targetItem.quantity <= 0) {
                     userShoppingCart = userShoppingCart.filter(cartItem => cartItem.id !== productId);
                 }
@@ -941,16 +1189,18 @@
             function removeItemFromCart(productId) {
                 userShoppingCart = userShoppingCart.filter(cartItem => cartItem.id !== productId);
                 updateCartUI();
+                showToastNotification("🗑️ Item removed from cart.");
             }
 
             function clearEntireCart() {
+                if (userShoppingCart.length === 0) return;
                 userShoppingCart = [];
                 updateCartUI();
+                showToastNotification("✨ Shopping cart cleared completely.");
             }
 
             function updateCartUI() {
                 localStorage.setItem('zetaCartData', JSON.stringify(userShoppingCart));
-
                 const totalItemCount = userShoppingCart.reduce((sum, item) => sum + item.quantity, 0);
                 if (cartCountBadge) cartCountBadge.textContent = totalItemCount;
                 
@@ -965,11 +1215,8 @@
                 }
                 
                 globalCartTotal = 0;
-                
                 userShoppingCart.forEach(item => {
-                    const lineTotal = item.priceValue * item.quantity;
-                    globalCartTotal += lineTotal;
-                    
+                    globalCartTotal += (item.priceValue * item.quantity);
                     const itemRow = document.createElement('div');
                     itemRow.className = 'cart-item';
                     itemRow.innerHTML = `
@@ -989,7 +1236,6 @@
                     itemRow.querySelector('.minus-btn').addEventListener('click', () => updateQuantity(item.id, -1));
                     itemRow.querySelector('.plus-btn').addEventListener('click', () => updateQuantity(item.id, 1));
                     itemRow.querySelector('.remove-item-btn').addEventListener('click', () => removeItemFromCart(item.id));
-                    
                     cartItemsList.appendChild(itemRow);
                 });
                 
@@ -1013,19 +1259,70 @@
                 }
             }
 
+            // --- INTERACTIVE COUPON ENGINE SYSTEM ---
             function openCheckoutModal() {
                 if (userShoppingCart.length === 0) {
-                    alert("Please add items to your cart before checking out!");
+                    showToastNotification("⚠️ Your cart is empty! Add items first.");
                     return;
                 }
                 if (drawerElement) drawerElement.classList.remove('open');
                 if (overlayElement) overlayElement.classList.add('show');
-                if (modalCheckoutTotal) {
-                    modalCheckoutTotal.textContent = "₹" + globalCartTotal.toLocaleString('en-IN') + ".00";
+                
+                // Reset internal coupon modifiers
+                activelyAppliedDiscount = 0;
+                activelyAppliedCouponCode = "";
+                if (couponCodeInput) couponCodeInput.value = "";
+                if (couponStatusMsg) {
+                    couponStatusMsg.style.display = "none";
+                    couponStatusMsg.textContent = "";
                 }
-                if (checkoutForm) checkoutForm.style.display = "flex";
+                if (discountSummaryRow) discountSummaryRow.style.display = "none";
+                
+                recalculateCheckoutTotals();
+                
+                if (checkoutFormContainer) checkoutFormContainer.style.display = "block";
                 if (orderSuccessScreen) orderSuccessScreen.style.display = "none";
                 if (checkoutModal) checkoutModal.classList.add('active');
+            }
+
+            function recalculateCheckoutTotals() {
+                const subtotal = globalCartTotal;
+                const totalDiscount = Math.round(subtotal * activelyAppliedDiscount);
+                const grandTotal = subtotal - totalDiscount;
+
+                if (modalSubtotalValue) modalSubtotalValue.textContent = "₹" + subtotal.toLocaleString('en-IN') + ".00";
+                
+                if (activelyAppliedDiscount > 0) {
+                    if (discountSummaryRow) discountSummaryRow.style.display = "flex";
+                    if (modalDiscountValue) modalDiscountValue.textContent = "-₹" + totalDiscount.toLocaleString('en-IN') + ".00";
+                } else {
+                    if (discountSummaryRow) discountSummaryRow.style.display = "none";
+                }
+
+                if (modalCheckoutTotal) modalCheckoutTotal.textContent = "₹" + grandTotal.toLocaleString('en-IN') + ".00";
+            }
+
+            if (applyCouponBtn) {
+                applyCouponBtn.addEventListener('click', () => {
+                    const rawInput = couponCodeInput.value.toUpperCase().trim();
+                    if (!rawInput) return;
+
+                    if (verifiedCoupons.hasOwnProperty(rawInput)) {
+                        activelyAppliedDiscount = verifiedCoupons[rawInput];
+                        activelyAppliedCouponCode = rawInput;
+                        
+                        couponStatusMsg.style.display = "block";
+                        couponStatusMsg.style.color = "var(--success-green)";
+                        couponStatusMsg.textContent = `✓ Code "${rawInput}" loaded! Saved ${(activelyAppliedDiscount * 100)}% off your purchase total.`;
+                        
+                        recalculateCheckoutTotals();
+                        showToastNotification("✨ Promotion code locked in!");
+                    } else {
+                        couponStatusMsg.style.display = "block";
+                        couponStatusMsg.style.color = "#c45500";
+                        couponStatusMsg.textContent = "❌ Invalid coupon code entry. Check spelling and retry.";
+                    }
+                });
             }
 
             function closeCheckoutModal() {
@@ -1046,34 +1343,44 @@
                 });
             }
 
-            // CHECKOUT ORDER RETENTION LOGIC
-            if (checkoutForm) {
-                checkoutForm.addEventListener('submit', (e) => {
+            // ORDER COMPLETION & RETENTION VAULT LOGIC
+            if (submitOrderBtn) {
+                submitOrderBtn.addEventListener('click', (e) => {
                     e.preventDefault();
                     
+                    const nameField = document.getElementById('customer-name');
+                    const addressField = document.getElementById('customer-address');
+                    
+                    if (!nameField.value.trim() || !addressField.value.trim()) {
+                        showToastNotification("⚠️ Please fill in all shipping configuration options.");
+                        return;
+                    }
+
+                    const finalGrandTotal = globalCartTotal - Math.round(globalCartTotal * activelyAppliedDiscount);
                     const randomId = Math.floor(100000 + Math.random() * 900000);
                     const orderTrackingCode = `ZM-${randomId}-IN`;
                     if (generatedTrackingId) generatedTrackingId.textContent = orderTrackingCode;
                     
                     const newOrder = {
                         trackingId: orderTrackingCode,
-                        name: document.getElementById('customer-name').value,
-                        address: document.getElementById('customer-address').value,
-                        total: globalCartTotal,
+                        name: nameField.value,
+                        address: addressField.value,
+                        total: finalGrandTotal,
+                        couponUsed: activelyAppliedCouponCode || "NONE",
                         itemCount: userShoppingCart.reduce((sum, item) => sum + item.quantity, 0),
                         date: new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })
                     };
 
-                    // Cache structural values back down to array cache
                     recordedOrders.unshift(newOrder);
                     localStorage.setItem('zetaOrderHistory', JSON.stringify(recordedOrders));
 
-                    checkoutForm.style.display = "none";
+                    if (checkoutFormContainer) checkoutFormContainer.style.display = "none";
                     if (orderSuccessScreen) orderSuccessScreen.style.display = "flex";
                     
                     userShoppingCart = [];
                     updateCartUI();
                     checkoutForm.reset();
+                    showToastNotification("🎉 Order successfully locked into vault!");
                 });
             }
 
