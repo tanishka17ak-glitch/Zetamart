@@ -378,6 +378,126 @@
         .cart-overlay.show {
             display: block;
         }
+
+        /* NEW FEATURE: Checkout Modal Window Styles */
+        .modal-view-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 90%;
+            max-width: 500px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            transition: all 0.2s ease-in-out;
+            opacity: 0;
+        }
+        .modal-view-panel.active {
+            display: flex;
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+        .modal-header {
+            background-color: var(--main-blue);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 {
+            font-size: 18px;
+        }
+        .close-modal-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .modal-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .input-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #444;
+        }
+        .input-group input, .input-group textarea {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 15px;
+            outline: none;
+        }
+        .input-group input:focus, .input-group textarea:focus {
+            border-color: var(--zeta-gold);
+        }
+        .order-summary-row {
+            display: flex;
+            justify-content: space-between;
+            background-color: #f7f9fa;
+            padding: 12px;
+            border-radius: 4px;
+            font-weight: 600;
+            border: 1px solid #e7e9ec;
+        }
+        .place-order-btn {
+            background-color: var(--zeta-amber);
+            border: 1px solid #a88734;
+            padding: 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .place-order-btn:hover {
+            background-color: #f7a325;
+        }
+
+        /* Success screen within modal */
+        .success-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 30px 20px;
+            gap: 15px;
+        }
+        .success-icon {
+            font-size: 50px;
+            color: #2e7d32;
+            background-color: #e8f5e9;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .tracking-code {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #eee;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 16px;
+            letter-spacing: 1px;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -436,7 +556,43 @@
                 <span>Subtotal:</span>
                 <span id="cart-calculated-total">₹0.00</span>
             </div>
-            <button class="checkout-btn">Proceed to Checkout</button>
+            <button class="checkout-btn" id="checkout-drawer-btn">Proceed to Checkout</button>
+        </div>
+    </div>
+
+    <!-- NEW FEATURE: Checkout Modal Popup -->
+    <div class="modal-view-panel" id="checkout-modal">
+        <div class="modal-header">
+            <h3>Secure Checkout</h3>
+            <button class="close-modal-btn" id="close-modal-trigger">&times;</button>
+        </div>
+        
+        <!-- Form View Section -->
+        <form id="checkout-form" class="modal-body">
+            <div class="input-group">
+                <label for="customer-name">Full Name</label>
+                <input type="text" id="customer-name" required placeholder="Enter your full name">
+            </div>
+            <div class="input-group">
+                <label for="customer-address">Shipping AddressLabel</label>
+                <textarea id="customer-address" rows="3" required placeholder="Enter your full delivery address"></textarea>
+            </div>
+            <div class="order-summary-row">
+                <span>Total Amount Due:</span>
+                <span id="modal-checkout-total">₹0.00</span>
+            </div>
+            <button type="submit" class="place-order-btn">Place Your Order</button>
+        </form>
+
+        <!-- Success Confirmation Section -->
+        <div class="success-screen" id="order-success-screen">
+            <div class="success-icon">✓</div>
+            <h2>Order Placed Successfully!</h2>
+            <p>Thank you for shopping at ZetaMart. Your parcel will be processed shortly.</p>
+            <div>
+                <div style="font-size: 13px; color: #666;">ZetaTrack ID:</div>
+                <div class="tracking-code" id="generated-tracking-id">ZM-849201-IN</div>
+            </div>
         </div>
     </div>
 
@@ -467,9 +623,10 @@
                 { id: 22, category: "books", title: "Arteza Expert Premium Watercolor Pencils (Set of 48/72)", priceText: "₹1,999.00", priceValue: 1999, rating: "★★★★★ (4.7)", img: "https://images.unsplash.com/photo-1519751138087-5bf79df62d5b?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0hNeYf4N" }
             ];
 
-            // Core State Tracking: Checked LocalStorage first to pull saved cart data
+            // Core State Tracking Variables
             let userShoppingCart = JSON.parse(localStorage.getItem('zetaCartData')) || [];
             let activeCategory = "all";
+            let globalCartTotal = 0; // Tracks absolute cost globally
             
             // DOM Selections
             const gridDisplay = document.getElementById('grid-display');
@@ -487,6 +644,15 @@
             const clearCartTrigger = document.getElementById('clear-cart-trigger');
             const cartItemsList = document.getElementById('cart-items-list');
             const cartCalculatedTotal = document.getElementById('cart-calculated-total');
+
+            // Modal View Node Selections
+            const checkoutDrawerBtn = document.getElementById('checkout-drawer-btn');
+            const checkoutModal = document.getElementById('checkout-modal');
+            const closeModalTrigger = document.getElementById('close-modal-trigger');
+            const checkoutForm = document.getElementById('checkout-form');
+            const orderSuccessScreen = document.getElementById('order-success-screen');
+            const modalCheckoutTotal = document.getElementById('modal-checkout-total');
+            const generatedTrackingId = document.getElementById('generated-tracking-id');
 
             function loadProducts(filteredProducts = products) {
                 if (!gridDisplay) return;
@@ -524,13 +690,11 @@
 
             // Cart Functional Operations
             function addItemToCart(productItem) {
-                // Check if item already exists in cart array
                 const existingItem = userShoppingCart.find(cartItem => cartItem.id === productItem.id);
                 
                 if (existingItem) {
                     existingItem.quantity += 1;
                 } else {
-                    // Push item with an initial quantity property
                     userShoppingCart.push({ ...productItem, quantity: 1 });
                 }
                 
@@ -543,7 +707,6 @@
 
                 targetItem.quantity += amount;
 
-                // If quantity drops to zero or lower, completely strip it from the array
                 if (targetItem.quantity <= 0) {
                     userShoppingCart = userShoppingCart.filter(cartItem => cartItem.id !== productId);
                 }
@@ -562,10 +725,8 @@
             }
 
             function updateCartUI() {
-                // Save updated array to LocalStorage
                 localStorage.setItem('zetaCartData', JSON.stringify(userShoppingCart));
 
-                // Calculate cumulative item count for the badge
                 const totalItemCount = userShoppingCart.reduce((sum, item) => sum + item.quantity, 0);
                 if (cartCountBadge) cartCountBadge.textContent = totalItemCount;
                 
@@ -575,14 +736,15 @@
                 if (userShoppingCart.length === 0) {
                     cartItemsList.innerHTML = `<p class="empty-cart-text">Your cart is completely empty.</p>`;
                     if (cartCalculatedTotal) cartCalculatedTotal.textContent = "₹0.00";
+                    globalCartTotal = 0;
                     return;
                 }
                 
-                let cumulativeTotal = 0;
+                globalCartTotal = 0;
                 
                 userShoppingCart.forEach(item => {
                     const lineTotal = item.priceValue * item.quantity;
-                    cumulativeTotal += lineTotal;
+                    globalCartTotal += lineTotal;
                     
                     const itemRow = document.createElement('div');
                     itemRow.className = 'cart-item';
@@ -608,7 +770,7 @@
                 });
                 
                 if (cartCalculatedTotal) {
-                    cartCalculatedTotal.textContent = "₹" + cumulativeTotal.toLocaleString('en-IN') + ".00";
+                    cartCalculatedTotal.textContent = "₹" + globalCartTotal.toLocaleString('en-IN') + ".00";
                 }
             }
 
@@ -627,10 +789,68 @@
                 }
             }
 
+            // NEW FUNCTIONALITY: Modal View Open/Close Handlers
+            function openCheckoutModal() {
+                if (userShoppingCart.length === 0) {
+                    alert("Please add items to your cart before checking out!");
+                    return;
+                }
+                
+                // Hide drawer layout panel first, but leave shading overlay active
+                if (drawerElement) drawerElement.classList.remove('open');
+                if (overlayElement) overlayElement.classList.add('show');
+                
+                // Set form totals
+                if (modalCheckoutTotal) {
+                    modalCheckoutTotal.textContent = "₹" + globalCartTotal.toLocaleString('en-IN') + ".00";
+                }
+                
+                // Reset screen states inside form panel
+                if (checkoutForm) checkoutForm.style.display = "flex";
+                if (orderSuccessScreen) orderSuccessScreen.style.display = "none";
+                
+                if (checkoutModal) checkoutModal.classList.add('active');
+            }
+
+            function closeCheckoutModal() {
+                if (checkoutModal) checkoutModal.classList.remove('active');
+                if (overlayElement) overlayElement.classList.remove('show');
+            }
+
             if (openCartTrigger) openCartTrigger.addEventListener('click', openCartDrawer);
             if (closeCartTrigger) closeCartTrigger.addEventListener('click', closeCartDrawer);
-            if (overlayElement) overlayElement.addEventListener('click', closeCartDrawer);
             if (clearCartTrigger) clearCartTrigger.addEventListener('click', clearEntireCart);
+            
+            // Wire checkout buttons
+            if (checkoutDrawerBtn) checkoutDrawerBtn.addEventListener('click', openCheckoutModal);
+            if (closeModalTrigger) closeModalTrigger.addEventListener('click', closeCheckoutModal);
+            
+            // Allow clicking background shade element to dismiss everything
+            if (overlayElement) {
+                overlayElement.addEventListener('click', () => {
+                    closeCartDrawer();
+                    closeCheckoutModal();
+                });
+            }
+
+            // NEW FUNCTIONALITY: Process checkout submission simulation
+            if (checkoutForm) {
+                checkoutForm.addEventListener('submit', (e) => {
+                    e.preventDefault(); // Stop normal web page transitions
+                    
+                    // Generate a random mock tracking string
+                    const randomId = Math.floor(100000 + Math.random() * 900000);
+                    if (generatedTrackingId) generatedTrackingId.textContent = `ZM-${randomId}-IN`;
+                    
+                    // Toggle form visibility screens
+                    checkoutForm.style.display = "none";
+                    if (orderSuccessScreen) orderSuccessScreen.style.display = "flex";
+                    
+                    // Wipe shopping carts down clean now that order is simulated
+                    userShoppingCart = [];
+                    updateCartUI();
+                });
+            }
 
             // Filtering Catalog Logic
             function filterCatalog() {
@@ -678,7 +898,6 @@
                 });
             }
 
-            // Load initial view state & check for saved cart cache
             loadProducts();
             updateCartUI();
         });
