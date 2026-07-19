@@ -85,7 +85,6 @@
         .cart-box:hover {
             border: 1px solid white;
         }
-        /* Make inner spans ignore click targeting so it bubbles up to the main box correctly */
         .cart-box span {
             pointer-events: none;
         }
@@ -238,6 +237,23 @@
             justify-content: space-between;
             align-items: center;
         }
+        .cart-header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .clear-cart-btn {
+            background: none;
+            border: none;
+            color: var(--zeta-amber);
+            cursor: pointer;
+            font-size: 13px;
+            text-align: left;
+            text-decoration: underline;
+        }
+        .clear-cart-btn:hover {
+            color: white;
+        }
         .close-cart-btn {
             background: none;
             border: none;
@@ -285,6 +301,33 @@
         .cart-item-price {
             font-weight: bold;
             color: #333;
+            margin-bottom: 8px;
+        }
+        .cart-qty-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .qty-btn {
+            background-color: #e7e9ec;
+            border: 1px solid #adb1b8;
+            border-radius: 3px;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .qty-btn:hover {
+            background-color: #e2e4e6;
+        }
+        .qty-number {
+            font-size: 14px;
+            font-weight: 600;
+            min-width: 15px;
+            text-align: center;
         }
         .remove-item-btn {
             background: none;
@@ -292,6 +335,7 @@
             color: #c45500;
             cursor: pointer;
             font-size: 13px;
+            margin-left: auto;
         }
         .remove-item-btn:hover {
             text-decoration: underline;
@@ -321,7 +365,6 @@
         .checkout-btn:hover {
             background-color: #e68a00;
         }
-        /* Background dim overlay when cart is open */
         .cart-overlay {
             position: fixed;
             top: 0;
@@ -379,7 +422,10 @@
     <div class="cart-overlay" id="cart-screen-overlay"></div>
     <div class="cart-drawer" id="shopping-cart-drawer">
         <div class="cart-header">
-            <h3>Shopping Cart</h3>
+            <div class="cart-header-left">
+                <h3>Shopping Cart</h3>
+                <button class="clear-cart-btn" id="clear-cart-trigger">Clear All</button>
+            </div>
             <button class="close-cart-btn" id="close-cart-trigger">&times;</button>
         </div>
         <div class="cart-items-container" id="cart-items-list">
@@ -421,8 +467,8 @@
                 { id: 22, category: "books", title: "Arteza Expert Premium Watercolor Pencils (Set of 48/72)", priceText: "₹1,999.00", priceValue: 1999, rating: "★★★★★ (4.7)", img: "https://images.unsplash.com/photo-1519751138087-5bf79df62d5b?auto=format&fit=crop&w=400&q=80", link: "https://link.amazon/B0hNeYf4N" }
             ];
 
-            // Core State Tracking Arrays
-            let userShoppingCart = [];
+            // Core State Tracking: Checked LocalStorage first to pull saved cart data
+            let userShoppingCart = JSON.parse(localStorage.getItem('zetaCartData')) || [];
             let activeCategory = "all";
             
             // DOM Selections
@@ -438,6 +484,7 @@
             const overlayElement = document.getElementById('cart-screen-overlay');
             const openCartTrigger = document.getElementById('open-cart-trigger');
             const closeCartTrigger = document.getElementById('close-cart-trigger');
+            const clearCartTrigger = document.getElementById('clear-cart-trigger');
             const cartItemsList = document.getElementById('cart-items-list');
             const cartCalculatedTotal = document.getElementById('cart-calculated-total');
 
@@ -477,17 +524,50 @@
 
             // Cart Functional Operations
             function addItemToCart(productItem) {
-                userShoppingCart.push(productItem);
+                // Check if item already exists in cart array
+                const existingItem = userShoppingCart.find(cartItem => cartItem.id === productItem.id);
+                
+                if (existingItem) {
+                    existingItem.quantity += 1;
+                } else {
+                    // Push item with an initial quantity property
+                    userShoppingCart.push({ ...productItem, quantity: 1 });
+                }
+                
                 updateCartUI();
             }
 
-            function removeItemFromCart(indexPosition) {
-                userShoppingCart.splice(indexPosition, 1);
+            function updateQuantity(productId, amount) {
+                const targetItem = userShoppingCart.find(cartItem => cartItem.id === productId);
+                if (!targetItem) return;
+
+                targetItem.quantity += amount;
+
+                // If quantity drops to zero or lower, completely strip it from the array
+                if (targetItem.quantity <= 0) {
+                    userShoppingCart = userShoppingCart.filter(cartItem => cartItem.id !== productId);
+                }
+
+                updateCartUI();
+            }
+
+            function removeItemFromCart(productId) {
+                userShoppingCart = userShoppingCart.filter(cartItem => cartItem.id !== productId);
+                updateCartUI();
+            }
+
+            function clearEntireCart() {
+                userShoppingCart = [];
                 updateCartUI();
             }
 
             function updateCartUI() {
-                if (cartCountBadge) cartCountBadge.textContent = userShoppingCart.length;
+                // Save updated array to LocalStorage
+                localStorage.setItem('zetaCartData', JSON.stringify(userShoppingCart));
+
+                // Calculate cumulative item count for the badge
+                const totalItemCount = userShoppingCart.reduce((sum, item) => sum + item.quantity, 0);
+                if (cartCountBadge) cartCountBadge.textContent = totalItemCount;
                 
                 if (!cartItemsList) return;
                 cartItemsList.innerHTML = "";
@@ -500,8 +580,9 @@
                 
                 let cumulativeTotal = 0;
                 
-                userShoppingCart.forEach((item, index) => {
-                    cumulativeTotal += item.priceValue;
+                userShoppingCart.forEach(item => {
+                    const lineTotal = item.priceValue * item.quantity;
+                    cumulativeTotal += lineTotal;
                     
                     const itemRow = document.createElement('div');
                     itemRow.className = 'cart-item';
@@ -509,14 +590,19 @@
                         <img src="${item.img}" class="cart-item-img" alt="${item.title}">
                         <div class="cart-item-details">
                             <div class="cart-item-title">${item.title}</div>
-                            <div class="cart-item-price">${item.priceText}</div>
-                            <button class="remove-item-btn" data-index="${index}">Remove</button>
+                            <div class="cart-item-price">${item.priceText} x ${item.quantity}</div>
+                            <div class="cart-qty-controls">
+                                <button class="qty-btn minus-btn" data-id="${item.id}">-</button>
+                                <span class="qty-number">${item.quantity}</span>
+                                <button class="qty-btn plus-btn" data-id="${item.id}">+</button>
+                                <button class="remove-item-btn" data-id="${item.id}">Remove</button>
+                            </div>
                         </div>
                     `;
                     
-                    itemRow.querySelector('.remove-item-btn').addEventListener('click', () => {
-                        removeItemFromCart(index);
-                    });
+                    itemRow.querySelector('.minus-btn').addEventListener('click', () => updateQuantity(item.id, -1));
+                    itemRow.querySelector('.plus-btn').addEventListener('click', () => updateQuantity(item.id, 1));
+                    itemRow.querySelector('.remove-item-btn').addEventListener('click', () => removeItemFromCart(item.id));
                     
                     cartItemsList.appendChild(itemRow);
                 });
@@ -544,6 +630,7 @@
             if (openCartTrigger) openCartTrigger.addEventListener('click', openCartDrawer);
             if (closeCartTrigger) closeCartTrigger.addEventListener('click', closeCartDrawer);
             if (overlayElement) overlayElement.addEventListener('click', closeCartDrawer);
+            if (clearCartTrigger) clearCartTrigger.addEventListener('click', clearEntireCart);
 
             // Filtering Catalog Logic
             function filterCatalog() {
@@ -591,7 +678,9 @@
                 });
             }
 
+            // Load initial view state & check for saved cart cache
             loadProducts();
+            updateCartUI();
         });
     </script>
 </body>
